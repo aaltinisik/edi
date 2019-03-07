@@ -547,34 +547,34 @@ class AccountInvoice(models.Model):
                     else:
                         vat_number = str(vat_country) + str(vat_number)
                        
-#                     registered_vat, postboxes = provider_id.get_registered_user(vat_number)
-#                     if registered_vat:
-#                         #TODO: get postboxes and set 
-#                         partner_id.einvoice_registered = 'yes'
-#                         add_postboxes = [(0, 0, {'partner_id':partner_id.id,
-#                                                  'name':pb['alias']}) for pb in postboxes \
-#                         
-#                             if pb['alias'] not in partner_id.einvoice_postbox_ids.mapped('name') ]
-#                         partner_id.einvoice_postbox_ids = add_postboxes 
-#                         
-#                         
-#                         if not partner_id.default_einvoice_postbox_id.id:
-#                             default_pb = partner_id.einvoice_postbox_ids.filtered(lambda pb: 'default' in pb.name)
-#                             
-#                             if len(default_pb) > 0:
-#                                 default_pb = default_pb[0]
-#                             elif len(partner_id.einvoice_postbox_ids) > 0:
-#                                 default_pb = partner_id.einvoice_postbox_ids[0]
-#                             
-#                             partner_id.default_einvoice_postbox_id = default_pb 
-#                             
-#                         vals = {'digital_invoice_type': 'e_invoice'}
-#                         if not invoice.einvoice_postbox_id:
-#                             vals.update({'einvoice_postbox_id':partner_id.default_einvoice_postbox_id.id})
-#                         invoice.write(vals)
+                    registered_vat, postboxes = provider_id.get_registered_user(vat_number)
+                    if registered_vat:
+                        #TODO: get postboxes and set 
+                        partner_id.einvoice_registered = 'yes'
+                        add_postboxes = [(0, 0, {'partner_id':partner_id.id,
+                                                 'name':pb['alias']}) for pb in postboxes \
+                        
+                            if pb['alias'] not in partner_id.einvoice_postbox_ids.mapped('name') ]
+                        partner_id.einvoice_postbox_ids = add_postboxes 
+                        
+                        
+                        if not partner_id.default_einvoice_postbox_id.id:
+                            default_pb = partner_id.einvoice_postbox_ids.filtered(lambda pb: 'default' in pb.name)
+                            
+                            if len(default_pb) > 0:
+                                default_pb = default_pb[0]
+                            elif len(partner_id.einvoice_postbox_ids) > 0:
+                                default_pb = partner_id.einvoice_postbox_ids[0]
+                            
+                            partner_id.default_einvoice_postbox_id = default_pb 
+                            
+                        vals = {'digital_invoice_type': 'e_invoice'}
+                        if not invoice.einvoice_postbox_id:
+                            vals.update({'einvoice_postbox_id':partner_id.default_einvoice_postbox_id.id})
+                        invoice.write(vals)
     
-                    #else:
-                    #    invoice.write({'digital_invoice_type': 'e_archive'})
+                    else:
+                        invoice.write({'digital_invoice_type': 'e_archive'})
     
             else:
                 invoice.write({'digital_invoice_type': 'e_archive'})

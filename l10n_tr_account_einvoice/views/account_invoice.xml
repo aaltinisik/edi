@@ -105,7 +105,7 @@
             <xpath expr="//button[@name='attach_ubl_xml_file_button']" position="replace">
 
                 <button type="object" name="attach_ubl_xml_file_button"
-                        string="Generate UBL XML File" invisible="1"/>
+                        string="Generate UBL XML File" invisible="0"/>
 
             </xpath>
         </field>

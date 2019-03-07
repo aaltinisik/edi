@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_billing_point_form" model="ir.ui.view">
+        <field name="name">account.einvoice.provider.form</field>
+        <field name="model">account.einvoice.provider</field>
+        <field name="arch" type="xml">
+            <form string="Einvoice Provider">
+                <group name="options">
+                	<field name="type"/>
+                     <field name="isis_username" attrs="{'required':[('type','=','isis')],'invisible':[('type','!=','isis')]}"/>
+                     <field name="isis_password" attrs="{'required':[('type','=','isis')],'invisible':[('type','!=','isis')]}"/>
+                     <field name="isis_customer_number" attrs="{'required':[('type','=','isis')],'invisible':[('type','!=','isis')]}"/>
+                </group>
+            </form>
+        </field>
+    </record>
+    
+      <record id="view_billing_point_form" model="ir.ui.view">
+        <field name="name">account.einvoice.provider.tree</field>
+        <field name="model">account.einvoice.provider</field>
+        <field name="arch" type="xml">
+            <tree string="Einvoice Provider">
+                	<field name="type"/>
+                     <field name="isis_username" attrs="{'required':[('type','=','isis')],'invisible':[('type','!=','isis')]}"/>
+                     <field name="isis_password" attrs="{'required':[('type','=','isis')],'invisible':[('type','!=','isis')]}"/>
+                     <field name="isis_customer_number" attrs="{'required':[('type','=','isis')],'invisible':[('type','!=','isis')]}"/>
+            </tree>
+        </field>
+    </record>
+     <record id="action_view_billing_point_form" model="ir.actions.act_window">
+            <field name="name">Billing Point</field>
+            <field name="res_model">account.einvoice.provider</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem action="action_view_billing_point_form" id="menuitem_action_view_billing_point_form" parent="mrp.menu_mrp_bom" sequence="20"/>
+	
+    </data>
+</odoo>
+	
+	
