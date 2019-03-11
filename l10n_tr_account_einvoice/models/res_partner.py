@@ -81,7 +81,7 @@ class ResCompany(models.Model):
     tax_office = fields.Char("Tax Office")
     einvoice_registered = fields.Boolean('E-Invoice registered?', default=False)
     einvoice_provider_id = fields.Many2one('account.einvoice.provider',string='E-Invoice Provider')
-    
+    einvoice_sender_email = fields.Char('Einvoice sender')
     @api.multi
     def write(self, vals):
 

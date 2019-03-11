@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record model="ir.ui.view" id="view_billing_point_tree">
+            <field name="name">account.billing.point.tree</field>
+            <field name="model">account.billing.point</field>
+            <field name="priority">100</field>
+            <field name="arch" type="xml">
+                <tree string="Billing Points">
+                    <field name="name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_billing_point_form">
+            <field name="name">account.billing.point.form</field>
+            <field name="model">account.billing.point</field>
+            <field name="arch" type="xml">
+                <form string="Billing Points">
+                    <sheet string="Billing Points">
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                            <group>
+                                <field name="company_id" widget="selection" groups="base.group_multi_company"/>
+                                <field name="parent_id"/>
+                            </group>
+                        </group>
+                        <notebook>
+                                <page name="users" string="Users">
+                                    <field name="user_ids" widget="many2many_kanban">
+                                        <kanban quick_create="false" create="true" delete="true">
+                                            <field name="name"/>
+                                            <templates>
+                                                <t t-name="kanban-box">
+                                                    <div class="oe_kanban_global_click" style="position: relative">
+                                                        <a t-if="! read_only_mode" type="delete" style="position: absolute; right: 0; padding: 4px; diplay: inline-block">X</a>
+                                                        <div class="oe_module_vignette">
+                                                            <img t-att-src="kanban_image('res.users', 'image_small', record.id.value)" class="oe_avatar oe_kanban_avatar_smallbox"/>
+                                                            <div class="oe_module_desc">
+                                                                <field name="name"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </templates>
+                                        </kanban>
+                                    </field>
+                                </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record> 
+
+        <record model="ir.ui.view" id="view_prenumbered_invoices">
+            <field name="name">account.billing.point.search</field>
+            <field name="model">account.billing.point</field>
+            <field name="arch" type="xml">
+                <search string="Billing Points">
+                    <field name="name"/>
+                </search>
+            </field>
+        </record> 
+
+
+        <record model="ir.actions.act_window" id="action_billing_points">
+            <field name="name">Billing Points</field>
+            <field name="res_model">account.billing.point</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref=""/>
+            <field name="view_id" ref="view_billing_point_tree"/>
+        </record>
+
+        <menuitem id="menu_finance_billing" name="Billing" parent="account.menu_finance_configuration" sequence="65"/>
+
+        <menuitem
+            action="action_billing_points"
+            id="menu_billing_points"
+                sequence="10"
+            parent="menu_finance_billing"/>
+
+    </data>
+</openerp>

@@ -12,6 +12,7 @@
         'security/ir.model.access.csv',
         'views/res_partner.xml',
         'views/account_invoice.xml',
+        'views/account_einvoice_provider_view.xml',
         'data/custom_ubl_data.xml',
     ],
     'installable': True,

@@ -301,7 +301,7 @@ class AccountInvoice(models.Model):
     def attach_ubl_xml_file_button(self):
         self.ensure_one()
         assert self.type in ('out_invoice', 'out_refund')
-        assert self.state in ('open', 'paid')
+        #assert self.state in ('open', 'paid')
         version = self.get_ubl_version()
         xml_string = self.generate_ubl_xml_string(version=version)
         filename = self.get_ubl_filename(version=version)

@@ -1,0 +1,157 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#	* account_billing_point
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 8.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-12-31 10:12+0000\n"
+"PO-Revision-Date: 2017-12-31 10:12+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: account_billing_point
+#: field:res.users,z_kamp_2017A:0
+msgid "2017 Adres güncelleme için arandı"
+msgstr "2017 Adres güncelleme için arandı"
+
+#. module: account_billing_point
+#: help:res.users,z_kamp_2017A:0
+msgid "2017 Temmuz Adres günceleme için arandı."
+msgstr "2017 Temmuz Adres günceleme için arandı."
+
+#. module: account_billing_point
+#: model:ir.ui.menu,name:account_billing_point.menu_finance_billing
+msgid "Billing"
+msgstr "Faturalandırma"
+
+#. module: account_billing_point
+#: view:account.invoice:account_billing_point.billing_point_invoice_tree
+#: field:account.invoice,billing_point_id:0
+#: model:ir.model,name:account_billing_point.model_account_billing_point
+msgid "Billing Point"
+msgstr "Faturalama Noktası"
+
+#. module: account_billing_point
+#: view:account.billing.point:account_billing_point.view_billing_point_form
+#: view:account.billing.point:account_billing_point.view_billing_point_tree
+#: view:account.billing.point:account_billing_point.view_prenumbered_invoices
+#: model:ir.actions.act_window,name:account_billing_point.action_billing_points
+#: model:ir.ui.menu,name:account_billing_point.menu_billing_points
+msgid "Billing Points"
+msgstr "Faturalama Noktaları"
+
+#. module: account_billing_point
+#: field:account.billing.point,child_ids:0
+msgid "Child Billing Points"
+msgstr "Alt Faturalama Noktaları"
+
+#. module: account_billing_point
+#: model:ir.model,name:account_billing_point.model_res_company
+msgid "Companies"
+msgstr "Şirketler"
+
+#. module: account_billing_point
+#: field:account.billing.point,company_id:0
+msgid "Company"
+msgstr "Firma"
+
+#. module: account_billing_point
+#: field:account.billing.point,create_uid:0
+msgid "Created by"
+msgstr "Oluşturan"
+
+#. module: account_billing_point
+#: field:account.billing.point,create_date:0
+msgid "Created on"
+msgstr "Oluşturulma"
+
+#. module: account_billing_point
+#: field:res.company,default_billing_point_id:0
+#: field:res.users,default_billing_point_id:0
+msgid "Default Billing Point"
+msgstr "Öntanımlı Faturalama Noktası"
+
+#. module: account_billing_point
+#: help:res.company,default_billing_point_id:0
+msgid "Default billing point for this company"
+msgstr "Bu firma için öntanımlı faturalama noktası"
+
+#. module: account_billing_point
+#: help:res.users,default_billing_point_id:0
+msgid "Default billing point for this user"
+msgstr "Bu kullanıcı  için öntanımlı faturalama noktası"
+
+#. module: account_billing_point
+#: code:addons/account_billing_point/models/account_billing_point.py:72
+#, python-format
+msgid "Error! Cannot create recursive cycle."
+msgstr "Hata! Döngü oluştu!"
+
+#. module: account_billing_point
+#: field:account.billing.point,id:0
+msgid "ID"
+msgstr "ID"
+
+#. module: account_billing_point
+#: model:ir.model,name:account_billing_point.model_account_invoice
+msgid "Invoice"
+msgstr "Fatura"
+
+#. module: account_billing_point
+#: field:account.billing.point,__last_update:0
+msgid "Last Modified on"
+msgstr "Last Modified on"
+
+#. module: account_billing_point
+#: field:account.billing.point,write_uid:0
+msgid "Last Updated by"
+msgstr "Son Güncelleyen"
+
+#. module: account_billing_point
+#: field:account.billing.point,write_date:0
+msgid "Last Updated on"
+msgstr "Son Güncelleme"
+
+#. module: account_billing_point
+#: field:account.billing.point,parent_left:0
+msgid "Left Parent"
+msgstr "Sol Üst"
+
+#. module: account_billing_point
+#: field:res.users,partner_product_ul:0
+msgid "Logistic Unit"
+msgstr "Taşıma Birimi"
+
+#. module: account_billing_point
+#: field:account.billing.point,display_name:0
+#: field:account.billing.point,name:0
+msgid "Name"
+msgstr "Adı"
+
+#. module: account_billing_point
+#: field:account.billing.point,parent_id:0
+msgid "Parent Billing Point"
+msgstr "Üst Faturalama Noktası"
+
+#. module: account_billing_point
+#: field:res.users,ranking:0
+msgid "Ranking"
+msgstr "Sıralama"
+
+#. module: account_billing_point
+#: field:account.billing.point,parent_right:0
+msgid "Right Parent"
+msgstr "Sağ Üst"
+
+#. module: account_billing_point
+#: view:account.billing.point:account_billing_point.view_billing_point_form
+#: field:account.billing.point,user_ids:0
+msgid "Users"
+msgstr "Kullanıcılar"
+

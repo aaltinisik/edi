@@ -11,6 +11,7 @@ class ResCompany(models.Model):
     xml_format_in_pdf_invoice = fields.Selection(
         selection_add=[('ubl', 'Universal Business Language (UBL)')],
         default='ubl')
+   
     embed_pdf_in_ubl_xml_invoice = fields.Boolean(
         string='Embed PDF in UBL XML Invoice',
         help="If active, the standalone UBL Invoice XML file will include the "

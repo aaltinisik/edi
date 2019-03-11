@@ -49,7 +49,9 @@ class AccountInvoice(models.Model):
     invoice_status_text = fields.Char(string="Invoice Info")
     
     # overwrite number to change to regular field from related field
-    number = fields.Char('Number',related=False, readonly=True, states={'draft': [('readonly', False)]}, copy=False)
+    number = fields.Char('Number',related=False, readonly=True,
+                         states={'draft': [('readonly', False)], 'open': [('readonly', False)],
+                                 'proforma': [('readonly', False)], 'proforma2': [('readonly', False)]}, copy=False)
     einvoice_postbox_id = fields.Many2one('res.partner.einvoice.postbox', 'Receiver Postbox')
     issue_time = fields.Char('Issue Time')
     
@@ -124,7 +126,7 @@ class AccountInvoice(models.Model):
             additional_reference, ns['cbc'] + 'ID')
         id.text = '0'
         issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
-        issue_date.text = self.date_invoice
+        issue_date.text = str(self.date_invoice)
         document_type_code = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentTypeCode')
         document_type_code.text = "SendingType"
         document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
@@ -360,7 +362,7 @@ class AccountInvoice(models.Model):
                     additional_reference, ns['cbc'] + 'ID')
                 id.text = self.number
                 issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
-                issue_date.text = self.date_invoice
+                issue_date.text = str(self.date_invoice)
                 document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
                 document_type.text = "XSLT"
                 attachment = etree.SubElement(additional_reference, ns['cac'] + 'Attachment')
@@ -547,7 +549,7 @@ class AccountInvoice(models.Model):
                     else:
                         vat_number = str(vat_country) + str(vat_number)
                        
-                    registered_vat, postboxes = provider_id.get_registered_user(vat_number)
+                    registered_vat,postboxes = provider_id.get_registered_user(vat_number)
                     if registered_vat:
                         #TODO: get postboxes and set 
                         partner_id.einvoice_registered = 'yes'
@@ -580,15 +582,16 @@ class AccountInvoice(models.Model):
                 invoice.write({'digital_invoice_type': 'e_archive'})
             
             
-            
-            sequence = invoice.journal_id.sequence_id
-            if invoice.digital_invoice_type == 'e_invoice':
-                sequence = self.env['ir.sequence'].search([('code', '=', 'account.einvoice')],limit=1)
-                         
-            elif invoice.digital_invoice_type == 'e_archive':
-                sequence = self.env['ir.sequence'].search([('code', '=', 'account.earchive')],limit=1)
-                
-            invoice.number = sequence.next_by_id()
+            if not  invoice.number:
+                sequence = invoice.journal_id.sequence_id
+                if invoice.digital_invoice_type == 'e_invoice':
+                    sequence = self.env['ir.sequence'].search([('code', '=', 'account.einvoice')],limit=1)
+                             
+                elif invoice.digital_invoice_type == 'e_archive':
+                    sequence = self.env['ir.sequence'].search([('code', '=', 'account.earchive')],limit=1)
+                    
+                invoice.number = sequence.next_by_id()
+             
 #             provider_res = invoice.company_id.einvoice_provider_id.send(invoice)
 #             if provider_res:
 #                 base64data = base64.b64encode(invoice.generate_ubl_xml_string(version=invoice.get_ubl_version()))
@@ -603,10 +606,14 @@ class AccountInvoice(models.Model):
 #                 }
 # 
 #                 invoice.einvoice_xml_id = self.env['ir.attachment'].create(attachmentdata)
+#             else:
+#                 raise ValidationError('Fatura gönderimi başarısız!')
 
             
         res = super(AccountInvoice, self).action_invoice_open()
 
+        for invoice in self.filtered(lambda i: not i.number and i.move_id):
+            invoice.number = invoice.move_id.name
         
 
         if "payment.transaction" in self.env:

@@ -58,12 +58,12 @@ class AccountEinvoiceProvider(models.Model):
         username = self.company_id.partner_id.vat[2:] + '|' + self.isis_customer_number + '|' + self.isis_username
         t = HttpAuthenticated(username=username, password=self.isis_password)
         if webservice_type == 'users':
-            if self.environment == 'TEST':
+            if self.environment == 'test':
                 ws = 'http://musteritestws.isisbilisim.com.tr/services/TaxPayerQuery.svc?singleWsdl'
             else:
                 ws = 'http://musteriws.isisbilisim.com.tr/services/TaxPayerQuery.svc?singleWsdl'
         else:
-            if self.environment == 'TEST':
+            if self.environment == 'test':
                 ws = 'http://erptestep.isisbilisim.com.tr/EInvoiceEasy.svc?singleWsdl'
             else:
                 ws = 'http://erpep.isisbilisim.com.tr/EInvoiceEasy.svc?singleWsdl'
@@ -83,26 +83,26 @@ class AccountEinvoiceProvider(models.Model):
             raise UserError(_('E-Invoice Provider Error!') + '\n\n' + message)
 
     @api.multi
-    def einvoice_send(self, invoice):
+    def send(self, invoice):
         if self.type != 'isis':
-            return super(AccountEinvoiceProvider, self).send_einvoice(invoice)
+            return super(AccountEinvoiceProvider, self).send(invoice)
         else:
-            data = self.einvoice_generate_invoice_xml(invoice)
+            data = invoice.generate_ubl_xml_string()
             _logger.debug("Sending Invoice: %s" % data.decode('utf-8'))
             output = io.BytesIO()
             xml_file = zipfile.ZipFile(output, "w")
-            xml_file.writestr('%s.xml' % invoice.einvoice_uuid, data)
+            xml_file.writestr('%s.xml' % invoice.invoice_unique_id, data)
             xml_file.close()
             bytedata = base64.b64encode(output.getvalue())
             try:
                 client = self.isis_get_client()
                 
-                alias = (invoice.einvoice_profile == 'EARSIVFATURA' and 'earchive') or \
-                        (invoice.einvoice_profile == 'IHRACAT' and 'urn:mail:ihracatpk@gtb.gov.tr')  or \
+                alias = (invoice.digital_invoice_type == 'e_archive' and 'e_archive' ) or \
+                        (invoice.digital_invoice_type == 'IHRACAT' and 'urn:mail:ihracatpk@gtb.gov.tr')  or \
                         invoice.einvoice_postbox_id.name
                 
                 result = client.service.SendInvoice(self.company_id.partner_id.vat[2:],
-                                                    invoice.einvoice_sender_id.name,
+                                                    invoice.company_id.einvoice_sender_email,
                                                     alias,
                                                     bytedata)
                 if result.Status == 'OK':
@@ -127,7 +127,7 @@ class AccountEinvoiceProvider(models.Model):
                     direction = 'OUTBOUND'
                 result = client.service.GetStatus(self.company_id.partner_id.vat[2:],
                                                   direction,
-                                                  invoice.einvoice_uuid)
+                                                  invoice.invoice_unique_id)
                 if result.Status == 'OK':
                     invoice.action_einvoice_completed()
                 elif result.Status == 'ACCEPTED':
@@ -163,7 +163,7 @@ class AccountEinvoiceProvider(models.Model):
         try:
             client = self.isis_get_client()
             result = client.service.SendResponse(self.company_id.partner_id.vat[2:],
-                                                invoice.einvoice_uuid,
+                                                invoice.invoice_unique_id,
                                                 response,
                                                 reason)
             if result.Status == 'OK':
@@ -246,7 +246,7 @@ class AccountEinvoiceProvider(models.Model):
             return False
 
     @api.multi
-    def einvoice_get_registered_users_by_vkn(self, vknList):
+    def get_registered_user(self, vknList):
         if self.type != 'isis':
             return super(AccountEinvoiceProvider, self).einvoice_get_registered_users_by_vkn(vknList)
         else:
@@ -282,7 +282,7 @@ class AccountEinvoiceProvider(models.Model):
                                 partner.default_einvoice_postbox = defaultpk[0]
                             
                         
-                return True
+                return False,False
             except WebFault as e:
                 _logger.error(_('E-Invoice Provider WebService Error!')+ '\n\n' + e.message)
                 pass

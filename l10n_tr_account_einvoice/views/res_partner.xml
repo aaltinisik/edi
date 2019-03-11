@@ -13,6 +13,7 @@
             <xpath expr="//field[@name='vat']" position="after">
                 <field name="einvoice_registered"/>
                 <field name="einvoice_provider_id" attrs="{'invisible':[('einvoice_registered','=',False)]}"/>
+            	<field name="einvoice_sender_email" attrs="{'invisible':[('einvoice_registered','=',False)]}"/>
             </xpath>
         </field>
     </record>

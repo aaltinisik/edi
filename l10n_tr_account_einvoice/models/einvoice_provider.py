@@ -14,6 +14,7 @@ class EinvoiceProvider(models.Model):
     type = fields.Selection([],string='Type')
     environment = fields.Selection([('test','TEST'),('prod','PRODUCTION')])
     name = fields.Char('Name')
+    company_id = fields.Many2one('res.company',default=1)
     
     
     
