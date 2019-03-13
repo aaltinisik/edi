@@ -118,134 +118,134 @@ class AccountInvoice(models.Model):
                 xml_root, iline, line_number, ns, version=version)
         return xml_root
 
-    @api.multi
-    def _ubl_add_sending_type(self, parent_node, ns):
-        additional_reference = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            additional_reference, ns['cbc'] + 'ID')
-        id.text = '0'
-        issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(self.date_invoice)
-        document_type_code = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentTypeCode')
-        document_type_code.text = "SendingType"
-        document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
-        document_type.text = "ELEKTRONIK"
+#     @api.multi
+#     def _ubl_add_sending_type(self, parent_node, ns):
+#         additional_reference = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             additional_reference, ns['cbc'] + 'ID')
+#         id.text = '0'
+#         issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(self.date_invoice)
+#         document_type_code = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentTypeCode')
+#         document_type_code.text = "SendingType"
+#         document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
+#         document_type.text = "ELEKTRONIK"
 
-    @api.multi
-    def _ubl_add_ecommerce_data(self, parent_node, ns):
-
-        # Web Address
-        web_address = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            web_address, ns['cbc'] + 'ID')
-        id.text = "internetSatisBilgi/webAdresi"
-
-        currentdate = datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
-        currentdate = currentdate.strftime('%Y-%m-%d')
-
-        issue_date = etree.SubElement(web_address, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(currentdate)
-        document_type = etree.SubElement(web_address, ns['cbc'] + 'DocumentType')
-        url = ""
-        if self.company_id:
-            if self.company_id.website:
-                url = self.company_id.website
-
-        document_type.text = url
-
-        # EInvoice  Condition
-        e_invoice = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            e_invoice, ns['cbc'] + 'ID')
-        id.text = "EINVOICE"
-
-        currentdate = datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
-        currentdate = currentdate.strftime('%Y-%m-%d')
-
-        issue_date = etree.SubElement(e_invoice, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(currentdate)
-        document_type = etree.SubElement(e_invoice, ns['cbc'] + 'DocumentType')
-        document_type.text = "3"
-
-        # Payment Type
-        payment_type = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            payment_type, ns['cbc'] + 'ID')
-        id.text = "internetSatisBilgi/odemeSekli"
-
-        issue_date = etree.SubElement(payment_type, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(currentdate)
-
-        document_type = etree.SubElement(payment_type, ns['cbc'] + 'DocumentType')
-        document_type.text = "KREDIKARTI/BANKAKARTI"
-
-        # Payment Date
-        payment_date = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            payment_date, ns['cbc'] + 'ID')
-        id.text = "internetSatisBilgi/odemeTarihi"
-
-        issue_date = etree.SubElement(payment_date, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(currentdate)
-
-        document_type = etree.SubElement(payment_date, ns['cbc'] + 'DocumentType')
-
-        date_paid = self.date_invoice
-        # TODO: must acquire from account.payment instead of payment.transaction
-        if "payment.transaction" in self.env:
-            if "invoice_id" in self.env["payment.transaction"]:
-                for invoice in self:
-                    tx = self.env["payment.transaction"].search([('invoice_id', '=', invoice.id)], limit=1)
-                    if tx.state == 'done' and invoice.amount_total == tx.amount:
-                        current_date = datetime.datetime.strptime(tx.create_date, "%Y-%m-%d %H:%M:%S")
-                        stripped_date = current_date.strftime("%Y-%m-%d")
-                        date_paid = stripped_date
-
-        document_type.text = str(date_paid)
-
-        # Delivery Date
-        delivery_date = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            delivery_date, ns['cbc'] + 'ID')
-        id.text = "internetSatisBilgi/gonderiBilgileri/gonderimTarihi"
-
-        issue_date = etree.SubElement(delivery_date, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(currentdate)
-
-        document_type = etree.SubElement(delivery_date, ns['cbc'] + 'DocumentType')
-        document_type.text = str(self.date_invoice)
-
-        # Carrier Info
-        carrier_info = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            carrier_info, ns['cbc'] + 'ID')
-        id.text = "internetSatisBilgi/gonderiBilgileri/gonderiTasiyan/tuzelKisi/vkn"
-
-        issue_date = etree.SubElement(carrier_info, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(currentdate)
-
-        document_type = etree.SubElement(carrier_info, ns['cbc'] + 'DocumentType')
-        document_type.text = "9860008925"
-
-        # Carrier Info
-        deliver_carrier = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            deliver_carrier, ns['cbc'] + 'ID')
-        id.text = "internetSatisBilgi/gonderiBilgileri/gonderiTasiyan/tuzelKisi/unvan"
-
-        issue_date = etree.SubElement(deliver_carrier, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(currentdate)
-
-        document_type = etree.SubElement(deliver_carrier, ns['cbc'] + 'DocumentType')
-        document_type.text = u"Yurtiçi Kargo Servisi A.Ş."
+#     @api.multi
+#     def _ubl_add_ecommerce_data(self, parent_node, ns):
+# 
+#         # Web Address
+#         web_address = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             web_address, ns['cbc'] + 'ID')
+#         id.text = "internetSatisBilgi/webAdresi"
+# 
+#         currentdate = datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
+#         currentdate = currentdate.strftime('%Y-%m-%d')
+# 
+#         issue_date = etree.SubElement(web_address, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(currentdate)
+#         document_type = etree.SubElement(web_address, ns['cbc'] + 'DocumentType')
+#         url = ""
+#         if self.company_id:
+#             if self.company_id.website:
+#                 url = self.company_id.website
+# 
+#         document_type.text = url
+# 
+#         # EInvoice  Condition
+#         e_invoice = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             e_invoice, ns['cbc'] + 'ID')
+#         id.text = "EINVOICE"
+# 
+#         currentdate = datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
+#         currentdate = currentdate.strftime('%Y-%m-%d')
+# 
+#         issue_date = etree.SubElement(e_invoice, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(currentdate)
+#         document_type = etree.SubElement(e_invoice, ns['cbc'] + 'DocumentType')
+#         document_type.text = "3"
+# 
+#         # Payment Type
+#         payment_type = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             payment_type, ns['cbc'] + 'ID')
+#         id.text = "internetSatisBilgi/odemeSekli"
+# 
+#         issue_date = etree.SubElement(payment_type, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(currentdate)
+# 
+#         document_type = etree.SubElement(payment_type, ns['cbc'] + 'DocumentType')
+#         document_type.text = "KREDIKARTI/BANKAKARTI"
+# 
+#         # Payment Date
+#         payment_date = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             payment_date, ns['cbc'] + 'ID')
+#         id.text = "internetSatisBilgi/odemeTarihi"
+# 
+#         issue_date = etree.SubElement(payment_date, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(currentdate)
+# 
+#         document_type = etree.SubElement(payment_date, ns['cbc'] + 'DocumentType')
+# 
+#         date_paid = self.date_invoice
+#         # TODO: must acquire from account.payment instead of payment.transaction
+#         if "payment.transaction" in self.env:
+#             if "invoice_id" in self.env["payment.transaction"]:
+#                 for invoice in self:
+#                     tx = self.env["payment.transaction"].search([('invoice_id', '=', invoice.id)], limit=1)
+#                     if tx.state == 'done' and invoice.amount_total == tx.amount:
+#                         current_date = datetime.datetime.strptime(tx.create_date, "%Y-%m-%d %H:%M:%S")
+#                         stripped_date = current_date.strftime("%Y-%m-%d")
+#                         date_paid = stripped_date
+# 
+#         document_type.text = str(date_paid)
+# 
+#         # Delivery Date
+#         delivery_date = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             delivery_date, ns['cbc'] + 'ID')
+#         id.text = "internetSatisBilgi/gonderiBilgileri/gonderimTarihi"
+# 
+#         issue_date = etree.SubElement(delivery_date, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(currentdate)
+# 
+#         document_type = etree.SubElement(delivery_date, ns['cbc'] + 'DocumentType')
+#         document_type.text = str(self.date_invoice)
+# 
+#         # Carrier Info
+#         carrier_info = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             carrier_info, ns['cbc'] + 'ID')
+#         id.text = "internetSatisBilgi/gonderiBilgileri/gonderiTasiyan/tuzelKisi/vkn"
+# 
+#         issue_date = etree.SubElement(carrier_info, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(currentdate)
+# 
+#         document_type = etree.SubElement(carrier_info, ns['cbc'] + 'DocumentType')
+#         document_type.text = "9860008925"
+# 
+#         # Carrier Info
+#         deliver_carrier = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             deliver_carrier, ns['cbc'] + 'ID')
+#         id.text = "internetSatisBilgi/gonderiBilgileri/gonderiTasiyan/tuzelKisi/unvan"
+# 
+#         issue_date = etree.SubElement(deliver_carrier, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(currentdate)
+# 
+#         document_type = etree.SubElement(deliver_carrier, ns['cbc'] + 'DocumentType')
+#         document_type.text = u"Yurtiçi Kargo Servisi A.Ş."
 
 
     @api.multi
@@ -346,16 +346,16 @@ class AccountInvoice(models.Model):
 
     @api.multi
     def _add_template_data(self, parent_node, ns, template_name):
-
+ 
         path = os.path.dirname(os.path.realpath(__file__)).replace('models', 'data')
-
+ 
         xslt_file = os.path.join(path, template_name + ".xslt")
         only_xslt = os.path.join(template_name, ".xslt")
-
+ 
         if os.path.isfile(xslt_file):
             with open(xslt_file, "rb") as f:
                 base64data = base64.b64encode(f.read())
-
+ 
                 additional_reference = etree.SubElement(
                     parent_node, ns['cac'] + 'AdditionalDocumentReference')
                 id = etree.SubElement(
@@ -366,7 +366,7 @@ class AccountInvoice(models.Model):
                 document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
                 document_type.text = "XSLT"
                 attachment = etree.SubElement(additional_reference, ns['cac'] + 'Attachment')
-
+ 
                 embedded_binary_object = etree.SubElement(attachment, ns['cbc'] + 'EmbeddedDocumentBinaryObject',
                                                           characterSetCode="UTF-8", encodingCode="Base64",
                                                           mimeCode="application/xml", filename=only_xslt)
@@ -582,15 +582,15 @@ class AccountInvoice(models.Model):
                 invoice.write({'digital_invoice_type': 'e_archive'})
             
             
-            if not  invoice.number:
-                sequence = invoice.journal_id.sequence_id
-                if invoice.digital_invoice_type == 'e_invoice':
-                    sequence = self.env['ir.sequence'].search([('code', '=', 'account.einvoice')],limit=1)
-                             
-                elif invoice.digital_invoice_type == 'e_archive':
-                    sequence = self.env['ir.sequence'].search([('code', '=', 'account.earchive')],limit=1)
-                    
-                invoice.number = sequence.next_by_id()
+            #if not  invoice.number:
+            sequence = invoice.journal_id.sequence_id
+            if invoice.digital_invoice_type == 'e_invoice':
+                sequence = self.env['ir.sequence'].search([('code', '=', 'account.einvoice')],limit=1)
+                         
+            elif invoice.digital_invoice_type == 'e_archive':
+                sequence = self.env['ir.sequence'].search([('code', '=', 'account.earchive')],limit=1)
+                
+            invoice.number = sequence.next_by_id()
              
 #             provider_res = invoice.company_id.einvoice_provider_id.send(invoice)
 #             if provider_res:
@@ -604,7 +604,7 @@ class AccountInvoice(models.Model):
 #                     "type": "binary",
 #                     "mimetype": "application/xml"
 #                 }
-# 
+#  
 #                 invoice.einvoice_xml_id = self.env['ir.attachment'].create(attachmentdata)
 #             else:
 #                 raise ValidationError('Fatura gönderimi başarısız!')
@@ -645,7 +645,7 @@ class AccountInvoice(models.Model):
         # Cancel process on eLogo
         for invoice in self:
             if invoice.digital_invoice_type == 'e_archive':
-                invoice.company_id.einvoice_provier_id.cancel(invoice)
+                invoice.company_id.einvoice_provider_id.cancel(invoice)
             else:
                 #TDE FIX ONUR
                 continue

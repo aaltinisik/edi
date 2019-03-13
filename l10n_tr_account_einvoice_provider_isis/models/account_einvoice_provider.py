@@ -35,6 +35,7 @@ except ImportError:
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, Warning
+from datetime import datetime,timedelta,date
 
 _logger = logging.getLogger(__name__)
 
@@ -101,16 +102,15 @@ class AccountEinvoiceProvider(models.Model):
                         (invoice.digital_invoice_type == 'IHRACAT' and 'urn:mail:ihracatpk@gtb.gov.tr')  or \
                         invoice.einvoice_postbox_id.name
                 
-                result = client.service.SendInvoice(self.company_id.partner_id.vat[2:],
-                                                    invoice.company_id.einvoice_sender_email,
-                                                    alias,
-                                                    bytedata)
+                result = client.service.SendInvoice(self.company_id.partner_id.vat,
+                                                    "","",
+                                                    bytedata.decode('utf-8'))
                 if result.Status == 'OK':
                     invoice.action_einvoice_waiting(_('E-Invoice sent'))
                 else:
                     self.isis_check_error(result)
             except WebFault as e:
-                raise UserError(_('E-Invoice Provider WebService Error!') + '\n\n' + e.message)
+                raise UserError(_('E-Invoice Provider WebService Error!') + '\n\n' + str(e))
             return True
 
 
@@ -190,7 +190,15 @@ class AccountEinvoiceProvider(models.Model):
             return super(AccountEinvoiceProvider, self).einvoice_reject()
         else:
             return self.isis_einvoice_send_response(invoice, 'REJECTED', reason)
-
+    
+    
+    @api.multi
+    def action_einvoice_get_registered_users(self):
+        previous_day = (datetime.strptime(str(self.registered_users_last_updated), '%Y-%m-%d') - timedelta(1))
+        res = self.einvoice_get_registered_users(previous_day.strftime('%Y-%m-%d'))
+        if res:
+            self.registered_users_last_updated = date.today()
+    
     @api.multi
     def einvoice_get_registered_users(self, from_date):
         if self.type != 'isis':
@@ -241,7 +249,7 @@ class AccountEinvoiceProvider(models.Model):
                     
                 return True
             except WebFault as e:
-                _logger.error(_('E-Invoice Provider WebService Error!')+ '\n\n' + e.message)
+                _logger.error(_('E-Invoice Provider WebService Error!')+ '\n\n' + e)
                 pass
             return False
 
@@ -334,6 +342,54 @@ class AccountEinvoiceProvider(models.Model):
                     self.einvoice_get_status(invoice)
                 except:
                     pass
+    
+    #cron jobs
+    
+    
+    @api.model
+    def run_get_registered_users(self):
+        providers = self.search([('auto_registered_user_update', '=', True)])
+        for provider in providers:
+            provider.action_einvoice_get_registered_users()
+
+    @api.model
+    def run_get_einvoices(self):
+        companies = self.env['res.company'].search([('einvoice_registered_company', '=', True)])
+        for company in companies:
+            if company.einvoice_provider.auto_invoice_retrieval:
+                company.einvoice_provider.action_einvoice_get_invoices()
+
+    @api.model
+    def run_update_einvoices(self):
+        companies = self.env['res.company'].search([('einvoice_registered_company', '=', True)])
+        for company in companies:
+            if company.einvoice_provider.auto_invoice_status_update:
+                company.einvoice_provider.action_einvoice_update_invoices()
+
+    @api.model
+    def run_send_einvoices(self):
+        companies = self.env['res.company'].search([('einvoice_registered_company', '=', True)])
+        exception_invoices = self.env['account.invoice']
+        for company_id in companies.ids:
+            for invoice in self.env['account.invoice'].search([('is_einvoice','!=',False),
+                                                               ('state','in',['open','paid']),
+                                                               ('einvoice_state','=','draft'),
+                                                               ('company_id','=',company_id)],order='internal_number asc',limit=10):
+                try:
+                    invoice.action_einvoice_send_xml()
+                except UserError as e:
+                    exception_invoices |= invoice
+                    message = _('E-Invoice Provider XML Send Error!')+ '\n\n' + e.value
+                    invoice.message_post(body=message)
+                    _logger.error(message)
+                    
+                except Exception as e:
+                    exception_invoices |= invoice
+                    message = _('E-Invoice Provider XML Send Error!')+ '\n\n' + e.message
+                    invoice.message_post(body=message)
+                    _logger.error(message)
+                    
+        exception_invoices.write({'einvoice_state':'exception'})    
 
 
 

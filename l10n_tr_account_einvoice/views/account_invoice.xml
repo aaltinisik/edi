@@ -22,10 +22,10 @@
 
             </xpath>
             <button name="action_invoice_cancel" position="before">
-                 <button type="object" name="send_einvoice"
+                 <button type="object" name="send"
                         string="Send E-Invoice"
                         attrs="{'invisible' : ['|',  ('send_status', '=', 'sent'), '|', ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_invoice')]}"/>
-                <button type="object" name="send_earchive"
+                <button type="object" name="send"
                         string="Send E-Archive"
                         attrs="{'invisible' : ['|', '|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_archive')]}"/>
                 <button type="object" name="update_status"
@@ -56,10 +56,10 @@
 
             </xpath>
             <button name="action_invoice_cancel" position="before">
-                <button type="object" name="send_einvoice"
+                <button type="object" name="send"
                         string="Send E-Invoice"
                         attrs="{'invisible' : ['|',  ('send_status', '=', 'sent'), '|', ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_invoice')]}"/>
-                <button type="object" name="send_earchive"
+                <button type="object" name="send"
                         string="Send E-Archive"
                         attrs="{'invisible' : ['|', '|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_archive')]}"/>
                 <button type="object" name="update_status"
