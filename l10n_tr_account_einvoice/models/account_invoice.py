@@ -60,6 +60,15 @@ class AccountInvoice(models.Model):
     
     
     @api.multi
+    def send(self, invoice):
+        ''' Send e-invoice ubl to provider. Intended to be implemented by inheriting module
+        '''
+        if self.company_id.einvoice_provider_id:
+            self.company_id.einvoice_provider_id.send(self)
+        else:
+            pass
+    
+    @api.multi
     def generate_ubl_xml_string(self, version='2.1'):
         self.ensure_one()
         # assert self.state in ('open', 'paid')
@@ -118,33 +127,33 @@ class AccountInvoice(models.Model):
                 xml_root, iline, line_number, ns, version=version)
         return xml_root
 
-#     @api.multi
-#     def _ubl_add_sending_type(self, parent_node, ns):
-#         additional_reference = etree.SubElement(
-#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
-#         id = etree.SubElement(
-#             additional_reference, ns['cbc'] + 'ID')
-#         id.text = '0'
-#         issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
-#         issue_date.text = str(self.date_invoice)
-#         document_type_code = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentTypeCode')
-#         document_type_code.text = "SendingType"
-#         document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
-#         document_type.text = "ELEKTRONIK"
+    @api.multi
+    def _ubl_add_sending_type(self, parent_node, ns):
+        additional_reference = etree.SubElement(
+            parent_node, ns['cac'] + 'AdditionalDocumentReference')
+        id = etree.SubElement(
+            additional_reference, ns['cbc'] + 'ID')
+        id.text = '0'
+        issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
+        issue_date.text = str(self.date_invoice)
+        document_type_code = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentTypeCode')
+        document_type_code.text = "SendingType"
+        document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
+        document_type.text = "ELEKTRONIK"
 
 #     @api.multi
 #     def _ubl_add_ecommerce_data(self, parent_node, ns):
-# 
-#         # Web Address
+#  
+        # Web Address
 #         web_address = etree.SubElement(
 #             parent_node, ns['cac'] + 'AdditionalDocumentReference')
 #         id = etree.SubElement(
 #             web_address, ns['cbc'] + 'ID')
 #         id.text = "internetSatisBilgi/webAdresi"
-# 
+#  
 #         currentdate = datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
 #         currentdate = currentdate.strftime('%Y-%m-%d')
-# 
+#  
 #         issue_date = etree.SubElement(web_address, ns['cbc'] + 'IssueDate')
 #         issue_date.text = str(currentdate)
 #         document_type = etree.SubElement(web_address, ns['cbc'] + 'DocumentType')
@@ -152,49 +161,49 @@ class AccountInvoice(models.Model):
 #         if self.company_id:
 #             if self.company_id.website:
 #                 url = self.company_id.website
-# 
+#  
 #         document_type.text = url
-# 
-#         # EInvoice  Condition
+ 
+        # EInvoice  Condition
 #         e_invoice = etree.SubElement(
 #             parent_node, ns['cac'] + 'AdditionalDocumentReference')
 #         id = etree.SubElement(
 #             e_invoice, ns['cbc'] + 'ID')
 #         id.text = "EINVOICE"
-# 
+ 
 #         currentdate = datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
 #         currentdate = currentdate.strftime('%Y-%m-%d')
-# 
+#  
 #         issue_date = etree.SubElement(e_invoice, ns['cbc'] + 'IssueDate')
 #         issue_date.text = str(currentdate)
 #         document_type = etree.SubElement(e_invoice, ns['cbc'] + 'DocumentType')
 #         document_type.text = "3"
-# 
-#         # Payment Type
+ 
+        # Payment Type
 #         payment_type = etree.SubElement(
 #             parent_node, ns['cac'] + 'AdditionalDocumentReference')
 #         id = etree.SubElement(
 #             payment_type, ns['cbc'] + 'ID')
 #         id.text = "internetSatisBilgi/odemeSekli"
-# 
+#  
 #         issue_date = etree.SubElement(payment_type, ns['cbc'] + 'IssueDate')
 #         issue_date.text = str(currentdate)
-# 
+#  
 #         document_type = etree.SubElement(payment_type, ns['cbc'] + 'DocumentType')
 #         document_type.text = "KREDIKARTI/BANKAKARTI"
-# 
-#         # Payment Date
+ 
+        # Payment Date
 #         payment_date = etree.SubElement(
 #             parent_node, ns['cac'] + 'AdditionalDocumentReference')
 #         id = etree.SubElement(
 #             payment_date, ns['cbc'] + 'ID')
 #         id.text = "internetSatisBilgi/odemeTarihi"
-# 
+ 
 #         issue_date = etree.SubElement(payment_date, ns['cbc'] + 'IssueDate')
 #         issue_date.text = str(currentdate)
-# 
+#  
 #         document_type = etree.SubElement(payment_date, ns['cbc'] + 'DocumentType')
-# 
+ 
 #         date_paid = self.date_invoice
 #         # TODO: must acquire from account.payment instead of payment.transaction
 #         if "payment.transaction" in self.env:
@@ -205,55 +214,49 @@ class AccountInvoice(models.Model):
 #                         current_date = datetime.datetime.strptime(tx.create_date, "%Y-%m-%d %H:%M:%S")
 #                         stripped_date = current_date.strftime("%Y-%m-%d")
 #                         date_paid = stripped_date
-# 
+#  
 #         document_type.text = str(date_paid)
-# 
-#         # Delivery Date
+ 
+        # Delivery Date
 #         delivery_date = etree.SubElement(
 #             parent_node, ns['cac'] + 'AdditionalDocumentReference')
 #         id = etree.SubElement(
 #             delivery_date, ns['cbc'] + 'ID')
 #         id.text = "internetSatisBilgi/gonderiBilgileri/gonderimTarihi"
-# 
+ 
 #         issue_date = etree.SubElement(delivery_date, ns['cbc'] + 'IssueDate')
 #         issue_date.text = str(currentdate)
-# 
+#  
 #         document_type = etree.SubElement(delivery_date, ns['cbc'] + 'DocumentType')
 #         document_type.text = str(self.date_invoice)
-# 
-#         # Carrier Info
+ 
+        # Carrier Info
 #         carrier_info = etree.SubElement(
 #             parent_node, ns['cac'] + 'AdditionalDocumentReference')
 #         id = etree.SubElement(
 #             carrier_info, ns['cbc'] + 'ID')
 #         id.text = "internetSatisBilgi/gonderiBilgileri/gonderiTasiyan/tuzelKisi/vkn"
-# 
+#  
 #         issue_date = etree.SubElement(carrier_info, ns['cbc'] + 'IssueDate')
 #         issue_date.text = str(currentdate)
-# 
+#  
 #         document_type = etree.SubElement(carrier_info, ns['cbc'] + 'DocumentType')
 #         document_type.text = "9860008925"
-# 
+ 
 #         # Carrier Info
 #         deliver_carrier = etree.SubElement(
 #             parent_node, ns['cac'] + 'AdditionalDocumentReference')
 #         id = etree.SubElement(
 #             deliver_carrier, ns['cbc'] + 'ID')
 #         id.text = "internetSatisBilgi/gonderiBilgileri/gonderiTasiyan/tuzelKisi/unvan"
-# 
+#  
 #         issue_date = etree.SubElement(deliver_carrier, ns['cbc'] + 'IssueDate')
 #         issue_date.text = str(currentdate)
-# 
-#         document_type = etree.SubElement(deliver_carrier, ns['cbc'] + 'DocumentType')
-#         document_type.text = u"Yurtiçi Kargo Servisi A.Ş."
+#  
 
 
     @api.multi
     def _ubl_add_header(self, parent_node, ns, version='2.1'):
-        ubl_extensions = etree.SubElement(parent_node, ns['ext'] + 'UBLExtensions')
-        ubl_extension = etree.SubElement(ubl_extensions, ns['ext'] + 'UBLExtension')
-        etree.SubElement(ubl_extension, ns['ext'] + 'ExtensionContent')
-        
         ubl_version = etree.SubElement(
             parent_node, ns['cbc'] + 'UBLVersionID')
         ubl_version.text = version
@@ -261,7 +264,7 @@ class AccountInvoice(models.Model):
         customization_id.text = "TR1.2"
         profile_id = etree.SubElement(parent_node, ns['cbc'] + 'ProfileID')
         if self.digital_invoice_type == 'e_invoice':
-            profile_id.text = "TEMELFATURA"
+            profile_id.text = "TICARIFATURA"
         else:
             profile_id.text = "EARSIVFATURA"
         doc_id = etree.SubElement(parent_node, ns['cbc'] + 'ID')
@@ -316,12 +319,12 @@ class AccountInvoice(models.Model):
 
         if self.digital_invoice_type == 'e_archive':
             self._ubl_add_sending_type(parent_node, ns)
-            self._ubl_add_ecommerce_data(parent_node, ns)
-            self._add_template_data(parent_node, ns, 'engieearsiv')
+            #self._ubl_add_ecommerce_data(parent_node, ns)
+            self._add_template_data(parent_node, ns, 'einvoice')
 
 
         if self.digital_invoice_type == 'e_invoice':
-            self._add_template_data(parent_node, ns, 'engieefatura')
+            self._add_template_data(parent_node, ns, 'einvoice')
 
         
     @api.multi
@@ -334,7 +337,7 @@ class AccountInvoice(models.Model):
                 order_date = sale_order.confirmation_date
                 order_name = sale_order.name
 
-                order_date_converted = datetime.datetime.strptime(order_date, "%Y-%m-%d %H:%M:%S")
+                order_date_converted = datetime.datetime.strptime(str(order_date), "%Y-%m-%d %H:%M:%S")
                 stripped_date = order_date_converted.strftime("%Y-%m-%d")
 
                 order_node = etree.SubElement(parent_node, ns['cac'] + 'OrderReference')
@@ -350,7 +353,7 @@ class AccountInvoice(models.Model):
         path = os.path.dirname(os.path.realpath(__file__)).replace('models', 'data')
  
         xslt_file = os.path.join(path, template_name + ".xslt")
-        only_xslt = os.path.join(template_name, ".xslt")
+        only_xslt = os.path.join(template_name, ".xslt").replace('/','')
  
         if os.path.isfile(xslt_file):
             with open(xslt_file, "rb") as f:
@@ -443,50 +446,50 @@ class AccountInvoice(models.Model):
             tax_scheme_taxtypecode = etree.SubElement(tax_scheme, ns['cbc'] + 'TaxTypeCode')
             tax_scheme_taxtypecode.text = "0015"
 
-#     @api.multi
-#     def _ubl_add_invoice_line(self, parent_node, iline, line_number, ns, version='2.1'):
-#         cur_name = self.currency_id.name
-#         line_root = etree.SubElement(
-#             parent_node, ns['cac'] + 'InvoiceLine')
-#         dpo = self.env['decimal.precision']
-#         qty_precision = dpo.precision_get('Product Unit of Measure')
-#         price_precision = dpo.precision_get('Product Price')
-#         account_precision = self.currency_id.decimal_places
-#         line_id = etree.SubElement(line_root, ns['cbc'] + 'ID')
-#         line_id.text = str(line_number)
-#         uom_unece_code = False
-#         # uom_id is not a required field on account.invoice.line
-#         if iline.uom_id and iline.uom_id.unece_code:
-#             uom_unece_code = iline.uom_id.unece_code
-#         if uom_unece_code:
-#             quantity = etree.SubElement(
-#                 line_root, ns['cbc'] + 'InvoicedQuantity',
-#                 unitCode=uom_unece_code)
-#         else:
-#             quantity = etree.SubElement(
-#                 line_root, ns['cbc'] + 'InvoicedQuantity')
-#         qty = iline.quantity
-#         quantity.text = '%0.*f' % (qty_precision, qty)
-#         line_amount = etree.SubElement(
-#             line_root, ns['cbc'] + 'LineExtensionAmount',
-#             currencyID=cur_name)
-#         line_amount.text = '%0.*f' % (account_precision, iline.price_subtotal)
-#         self._ubl_add_invoice_line_tax_total(
-#             iline, line_root, ns, version=version)
-#         self._ubl_add_item(
-#             iline.name, iline.product_id, line_root, ns, type='sale',
-#             version=version)
-#         price_node = etree.SubElement(line_root, ns['cac'] + 'Price')
-#         price_amount = etree.SubElement(
-#             price_node, ns['cbc'] + 'PriceAmount', currencyID=cur_name)
-#         price_unit = 0.0
-#         # Use price_subtotal/qty to compute price_unit to be sure
-#         # to get a *tax_excluded* price unit
-#         if not float_is_zero(qty, precision_digits=qty_precision):
-#             price_unit = float_round(
-#                 iline.price_subtotal / float(qty),
-#                 precision_digits=price_precision)
-#         price_amount.text = '%0.*f' % (price_precision, price_unit)
+    @api.multi
+    def _ubl_add_invoice_line(self, parent_node, iline, line_number, ns, version='2.1'):
+        cur_name = self.currency_id.name
+        line_root = etree.SubElement(
+            parent_node, ns['cac'] + 'InvoiceLine')
+        dpo = self.env['decimal.precision']
+        qty_precision = dpo.precision_get('Product Unit of Measure')
+        price_precision = dpo.precision_get('Product Price')
+        account_precision = self.currency_id.decimal_places
+        line_id = etree.SubElement(line_root, ns['cbc'] + 'ID')
+        line_id.text = str(line_number)
+        uom_unece_code = False
+        # uom_id is not a required field on account.invoice.line
+        if iline.uom_id and iline.uom_id.unece_code:
+            uom_unece_code = iline.uom_id.unece_code
+        if uom_unece_code:
+            quantity = etree.SubElement(
+                line_root, ns['cbc'] + 'InvoicedQuantity',
+                unitCode=uom_unece_code)
+        else:
+            quantity = etree.SubElement(
+                line_root, ns['cbc'] + 'InvoicedQuantity')
+        qty = iline.quantity
+        quantity.text = '%0.*f' % (qty_precision, qty)
+        line_amount = etree.SubElement(
+            line_root, ns['cbc'] + 'LineExtensionAmount',
+            currencyID=cur_name)
+        line_amount.text = '%0.*f' % (account_precision, iline.price_subtotal)
+        self._ubl_add_invoice_line_tax_total(
+            iline, line_root, ns, version=version)
+        self._ubl_add_item(
+            iline.name, iline.product_id, line_root, ns, type='sale',
+            version=version)
+        price_node = etree.SubElement(line_root, ns['cac'] + 'Price')
+        price_amount = etree.SubElement(
+            price_node, ns['cbc'] + 'PriceAmount', currencyID=cur_name)
+        price_unit = 0.0
+        # Use price_subtotal/qty to compute price_unit to be sure
+        # to get a *tax_excluded* price unit
+        if not float_is_zero(qty, precision_digits=qty_precision):
+            price_unit = float_round(
+                iline.price_subtotal / float(qty),
+                precision_digits=price_precision)
+        price_amount.text = '%0.*f' % (price_precision, price_unit)
 
    
    
@@ -670,10 +673,7 @@ class AccountInvoice(models.Model):
             xsl = base64.b64decode(xsl_ref[0].xpath("//cbc:EmbeddedDocumentBinaryObject",namespaces=namespaces)[0].text)
         else:
             path = os.path.dirname(os.path.realpath(__file__)).replace('models', 'data')
-            template_name =  'engieefatura'
-            if self.digital_invoice_type == 'e_archive':
-                template_name = 'engieearsiv'
-                
+            template_name =  'einvoice'
             xslt_file = os.path.join(path, template_name + ".xslt")
             if os.path.isfile(xslt_file):
                 with open(xslt_file, "rb") as f:

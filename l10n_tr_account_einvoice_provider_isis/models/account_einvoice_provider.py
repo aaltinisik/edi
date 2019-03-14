@@ -102,8 +102,9 @@ class AccountEinvoiceProvider(models.Model):
                         (invoice.digital_invoice_type == 'IHRACAT' and 'urn:mail:ihracatpk@gtb.gov.tr')  or \
                         invoice.einvoice_postbox_id.name
                 
-                result = client.service.SendInvoice(self.company_id.partner_id.vat,
-                                                    "","",
+                result = client.service.SendInvoice(self.company_id.partner_id.vat[2:],
+                                                    self.company_id.einvoice_sender_email,
+                                                    alias,
                                                     bytedata.decode('utf-8'))
                 if result.Status == 'OK':
                     invoice.action_einvoice_waiting(_('E-Invoice sent'))
