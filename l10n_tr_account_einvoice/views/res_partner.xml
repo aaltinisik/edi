@@ -33,7 +33,7 @@
                 			<field name="name"/>
                 		</tree>
                 	</field>
-                	
+                	<field name="mersis" groups="base.group_no_one"/>
                 </group>
             </xpath>
             

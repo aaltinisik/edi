@@ -108,12 +108,12 @@ class AccountInvoice(models.Model):
         self._ubl_add_customer_party(
             self.partner_id, False, 'AccountingCustomerParty', xml_root, ns,
             version=version)
-        # delivery_partner = self.get_delivery_partner()
-        # self._ubl_add_delivery(delivery_partner, xml_root, ns)
+        delivery_partner = self.get_delivery_partner()
+        self._ubl_add_delivery(delivery_partner, xml_root, ns)
         # Put paymentmeans block even when invoice is paid ?
-        self._ubl_add_payment_means(
-            self.partner_bank_id, self.payment_mode_id, self.date_due,
-            xml_root, ns, version=version)
+#         self._ubl_add_payment_means(
+#             self.partner_bank_id, self.payment_mode_id, self.date_due,
+#             xml_root, ns, version=version)
         if self.payment_term_id:
             self._ubl_add_payment_terms(
                 self.payment_term_id, xml_root, ns, version=version)
@@ -129,17 +129,18 @@ class AccountInvoice(models.Model):
 
     @api.multi
     def _ubl_add_sending_type(self, parent_node, ns):
-        additional_reference = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-        id = etree.SubElement(
-            additional_reference, ns['cbc'] + 'ID')
-        id.text = '0'
-        issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
-        issue_date.text = str(self.date_invoice)
-        document_type_code = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentTypeCode')
-        document_type_code.text = "SendingType"
-        document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
-        document_type.text = "ELEKTRONIK"
+        return {}
+#         additional_reference = etree.SubElement(
+#             parent_node, ns['cac'] + 'AdditionalDocumentReference')
+#         id = etree.SubElement(
+#             additional_reference, ns['cbc'] + 'ID')
+#         id.text = '0'
+#         issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
+#         issue_date.text = str(self.date_invoice)
+#         document_type_code = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentTypeCode')
+#         document_type_code.text = "SendingType"
+#         document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
+#         document_type.text = "ELEKTRONIK"
 
 #     @api.multi
 #     def _ubl_add_ecommerce_data(self, parent_node, ns):
@@ -284,38 +285,25 @@ class AccountInvoice(models.Model):
             type_code.text = "IADE"
         else:
             type_code.text = "SATIS"
+        total_in_count =etree.SubElement(parent_node, ns['cbc'] + 'Note')
+        total_in_count.text = 'YALNIZ ' + (self.invoice_amount_in_words)
+        total_balance =etree.SubElement(parent_node, ns['cbc'] + 'Note')
+        balance ="Borç"
+        if self.total_balance >0:
+            balance="Borç"
+        else:
+            balance ="Alacak"
+        total_balance.text= 'Bu fatura dahil hesap bakiyeniz: ' + str(self.total_balance) + ' ' + balance
         if self.comment:
             note = etree.SubElement(parent_node, ns['cbc'] + 'Note')
             note.text = self.comment
         doc_currency = etree.SubElement(
             parent_node, ns['cbc'] + 'DocumentCurrencyCode')
         doc_currency.text = self.currency_id.name
+        
         linecountnumeric = etree.SubElement(parent_node, ns['cbc'] + 'LineCountNumeric')
         linecountnumeric.text = str(len(self.invoice_line_ids))
-
         self._add_sales_order_info(parent_node, ns)
-
-        currentdate = datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
-        current_date = currentdate.strftime('%Y-%m-%d')
-        current_time = currentdate.strftime('%H:%M:%S')
-
-        create_date = etree.SubElement(
-            parent_node, ns['cac'] + 'AdditionalDocumentReference')
-
-        create_date_id = etree.SubElement(
-            create_date, ns['cbc'] + 'ID')
-        create_date_id.text = "duzenlemeTarihi"
-
-        create_date_issuedate = etree.SubElement(
-            create_date, ns['cbc'] + 'IssueDate')
-
-        create_date_issuedate.text  = str(current_date)
-
-        create_date_doctype = etree.SubElement(
-            create_date, ns['cbc'] + 'DocumentType')
-        create_date_doctype.text = str(current_time)
-
-
 
         if self.digital_invoice_type == 'e_archive':
             self._ubl_add_sending_type(parent_node, ns)
@@ -325,8 +313,10 @@ class AccountInvoice(models.Model):
 
         if self.digital_invoice_type == 'e_invoice':
             self._add_template_data(parent_node, ns, 'einvoice')
+            
+    
 
-        
+    
     @api.multi
     def _add_sales_order_info(self, parent_node, ns):
 
@@ -343,6 +333,8 @@ class AccountInvoice(models.Model):
                 order_node = etree.SubElement(parent_node, ns['cac'] + 'OrderReference')
 
                 order_id_node = etree.SubElement(order_node, ns['cbc'] + 'ID')
+                order_id_node.text = str(order_name)
+                order_id_node = etree.SubElement(order_node, ns['cbc'] + 'SalesOrderID')
                 order_id_node.text = str(order_name)
                 order_date_node = etree.SubElement(order_node, ns['cbc'] + 'IssueDate')
                 order_date_node.text = str(stripped_date)
@@ -376,7 +368,8 @@ class AccountInvoice(models.Model):
                 embedded_binary_object.text = base64data
         else:
             raise ValidationError(_("Requested Invoice template is not available."))
-
+    
+    
     @api.multi
     def _ubl_add_legal_monetary_total(self, parent_node, ns, version='2.1'):
         monetary_total = etree.SubElement(
@@ -397,14 +390,20 @@ class AccountInvoice(models.Model):
         tax_incl_total.text = '%0.*f' % (prec, self.amount_total)
         # calculate discount
         discount_total = 0
+        charge_total_amount=0
         for line in self.invoice_line_ids:
             if line.discount > 0:
                 discount_total += line.price_unit * (line.discount / 100) * line.quantity
-
+            if line.discount < 0:
+                charge_total_amount += abs(line.price_unit * line.quantity * (line.discount / 100))
         tax_allowance_total = etree.SubElement(
             monetary_total, ns['cbc'] + 'AllowanceTotalAmount',
             currencyID=cur_name)
         tax_allowance_total.text = str(discount_total)
+        charge_allowed_total = etree.SubElement(
+            monetary_total, ns['cbc'] + 'ChargeTotalAmount',
+            currencyID=cur_name)
+        charge_allowed_total.text = str(charge_total_amount)
         payable_amount = etree.SubElement(
             monetary_total, ns['cbc'] + 'PayableAmount',
             currencyID=cur_name)
@@ -457,6 +456,9 @@ class AccountInvoice(models.Model):
         account_precision = self.currency_id.decimal_places
         line_id = etree.SubElement(line_root, ns['cbc'] + 'ID')
         line_id.text = str(line_number)
+        line_note =etree.SubElement(line_root, ns['cbc'] + 'Note')
+        line_note.text=iline.name or "/"
+        
         uom_unece_code = False
         # uom_id is not a required field on account.invoice.line
         if iline.uom_id and iline.uom_id.unece_code:
