@@ -121,7 +121,22 @@ class BaseUbl(models.AbstractModel):
             pay_term_root, ns['cbc'] + 'PaymentDueDate')
         pay_term_due_date.text=str(self.date_due)
 
-
+    @api.model
+    def _ubl_add_delivery(
+            self, delivery_partner, parent_node, ns, version='2.1'):
+        delivery = etree.SubElement(parent_node, ns['cac'] + 'Delivery')
+        delivery_id = etree.SubElement(
+                delivery, ns['cbc'] + 'ID')
+        delivery_id.text="1"
+        actual_delivery_date = etree.SubElement(
+                delivery, ns['cbc'] + 'ActualDeliveryDate')
+        actual_delivery_date.text =(self.mapped('invoice_line_ids.picking_ids') and str(self.invoice_line_ids[0].picking_ids[0].date_done)[:10]) \
+            or str(self.date_invoice)[:10]
+        if self.carrier_id:
+            self._ubl_add_carrier(self.carrier_id.partner_id,'CarrierParty',delivery,ns,version=version)
+            self._ubl_add_carrier(self.partner_shipping_id.commercial_partner_id,'DeliveryParty',delivery,ns,version=version)
+            if self.incoterm_id:
+                self._ubl_add_delivery_terms(self.incoterm_id, delivery, ns, version='2.1')
 
     @api.model
     def _ubl_add_address(
@@ -160,6 +175,27 @@ class BaseUbl(models.AbstractModel):
         else:
             logger.warning('UBL: missing country on partner %s', partner.name)
             
+    @api.model
+    def _ubl_add_carrier(
+            self, partner, node_name, parent_node, ns, version='2.1'):
+        carrier_party=etree.SubElement(parent_node, ns['cac'] + node_name)
+        if partner.website:
+            partner_website=partner_website=etree.SubElement(carrier_party, ns['cbc'] + 'WebsiteURI')
+            partner_website.text=partner.website
+        party_identification = etree.SubElement(carrier_party, ns['cac'] + 'PartyIdentification')
+        if partner.vat:
+            partner_vat = etree.SubElement(party_identification, ns['cbc'] + 'ID',schemeID='VKN')
+            partner_vat.text=partner.vat.replace('TR','')
+        
+        party_name=etree.SubElement(carrier_party, ns['cac'] + 'PartyName')
+        party_name_name =etree.SubElement(party_name, ns['cbc'] + 'Name')
+        party_name_name.text=partner.display_name
+        self._ubl_add_address(
+            partner, 'PostalAddress', carrier_party, ns, version=version)
+        self._ubl_add_party_tax_scheme(
+             partner, carrier_party, ns)   
+        self._ubl_add_contact(partner, carrier_party, ns, version=version)
+
     @api.model
     def _ubl_get_tax_scheme_dict_from_partner(self, commercial_partner):
         tax_scheme_dict = {

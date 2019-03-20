@@ -11,6 +11,7 @@ from odoo import models, fields
 
 class EinvoicePostbox(models.Model):
     _name = 'res.partner.einvoice.postbox'
+    _description="Partner Postbox"
     
     name = fields.Char('Name', required=True)
     partner_id = fields.Many2one('res.partner','Partner', required=True, ondelete='cascade')

@@ -10,6 +10,7 @@ from odoo import models, fields, api
 
 class EinvoiceProvider(models.Model):
     _name = 'account.einvoice.provider'
+    _description="Einvoice Provider"
     
     type = fields.Selection([],string='Type')
     environment = fields.Selection([('test','TEST'),('prod','PRODUCTION')])
