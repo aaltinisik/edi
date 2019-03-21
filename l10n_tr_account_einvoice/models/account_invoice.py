@@ -19,6 +19,7 @@ import subprocess
 
 import tempfile
 from contextlib import closing
+from apport.hookutils import attach_file
 
 logger = logging.getLogger(__name__)
 
@@ -530,8 +531,7 @@ class AccountInvoice(models.Model):
                 'target': '_blank',
             }
             
-        
-
+    
     @api.multi
     def action_invoice_open(self):
         # Send E-Invoice or E-Archive    
@@ -596,21 +596,21 @@ class AccountInvoice(models.Model):
                 sequence = self.env['ir.sequence'].search([('code', '=', 'account.earchive')],limit=1)
                 
             invoice.number = sequence.next_by_id()
-             
-#             provider_res = invoice.company_id.einvoice_provider_id.send(invoice)
-#             if provider_res:
-#                 base64data = base64.b64encode(invoice.generate_ubl_xml_string(version=invoice.get_ubl_version()))
-#                 attachmentdata = {
-#                     "name": invoice.invoice_unique_id + ".xml",
-#                     "datas": base64data,
-#                     "datas_fname": invoice.invoice_unique_id + ".xml",
-#                     "res_model": "account.invoice",
-#                     "res_id": invoice.id,
-#                     "type": "binary",
-#                     "mimetype": "application/xml"
-#                 }
-#  
-#                 invoice.einvoice_xml_id = self.env['ir.attachment'].create(attachmentdata)
+            xslt= bytes(bytearray(u'{}'.format(self.get_einvoice_xsl()), encoding='utf-8')) 
+            #provider_res = invoice.company_id.einvoice_provider_id.send(invoice)
+            #if provider_res:
+            base64data = base64.b64encode(invoice.generate_ubl_xml_string(version=invoice.get_ubl_version()))
+            attachmentdata = {
+                "name": invoice.invoice_unique_id + ".xml",
+                "datas": base64data,
+                "datas_fname": invoice.invoice_unique_id + ".xml",
+                "res_model": "account.invoice",
+                "res_id": invoice.id,
+                "type": "binary",
+                "mimetype": "application/xml"
+            }
+#   
+            invoice.einvoice_xml_id = self.env['ir.attachment'].create(attachmentdata)
 #             else:
 #                 raise ValidationError('Fatura gönderimi başarısız!')
 
@@ -631,6 +631,50 @@ class AccountInvoice(models.Model):
                                 tx.acquirer_id.journal_id, pay_amount=invoice.amount_total)
 
         return res
+    
+    @api.model
+    def get_einvoice_xsl(self):
+        xsl_filepath = os.path.join(os.path.dirname(__file__), '../data/einvoice.xslt')
+        xsl_file = open(xsl_filepath)
+        xsl = xsl_file.read()
+        xsl_file.close()
+        return xsl
+    
+    @api.multi
+    def einvoice_generate_einvoice_pdf_from_xslt(self, invoice, einvoice, xslt):
+        transform = etree.XSLT(etree.XML(xslt))
+        template = transform(einvoice)
+        pdfreport_fd, pdfreport_path = tempfile.mkstemp(suffix='.pdf', prefix='einvoice.tmp.')
+        content_file_fd, content_file_path = tempfile.mkstemp(suffix='.html', prefix='einvoice.tmp.')
+        file_to_del = [pdfreport_path]
+        file_to_del.append(content_file_path)
+        with closing(os.fdopen(content_file_fd, 'w')) as content_file:
+            content_file.write(str(template))
+        try:
+            command_args = ['--footer-font-size','8','--footer-font-name','"Arial"','--footer-center','Sayfa [page]/[toPage]','--margin-left','3','--margin-right','2']
+            command_args.extend(['--quiet'])
+            wkhtmltopdf = [_get_wkhtmltopdf_bin()] + command_args
+            wkhtmltopdf += [content_file_path] + [pdfreport_path]
+
+            process = subprocess.Popen(wkhtmltopdf, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = process.communicate()
+
+            if process.returncode not in [0, 1]:
+                raise UserError(_('Wkhtmltopdf failed (error code: %s). '
+                                       'Message: %s') % (str(process.returncode), err))
+
+            with closing(os.fdopen(pdfreport_fd, 'rb')) as pdfreport:
+                pdf = base64.b64encode(pdfreport.read())
+
+            invoice.einvoice_attach_file(pdf, 'pdf')
+
+            for f_to_del in file_to_del:
+                try:
+                    os.unlink(f_to_del)
+                except OSError :
+                    _logger.error('cannot remove file %s: %s', f_to_del, OSError)
+        except:
+            raise
 
     @api.model
     def create(self, vals):
@@ -722,12 +766,29 @@ class AccountInvoice(models.Model):
             easily the next step of the workflow
         """
         self.ensure_one()
-        if self.digital_invoice_type:
-            return {
-                'type': 'ir.actions.act_url',
-                'url': '/web/show_invoice_pdf/%s' % self.id,
-                'target': 'current',
-            }
-        else:
-            return super(AccountInvoice, self).invoice_print()
+        self.sent = True
+        bytedata=False
+        self.einvoice_pdf_id.unlink()
+        if not self.einvoice_pdf_id.id:
+            bytedata=self.generate_einvoice_pdf()
         
+        self.einvoice_pdf_id=self.env['ir.attachment'].create({
+                'name':str(self.number) + '.pdf','type':'binary',
+                'datas':bytedata})   
+        return self.env['ir.actions.report'].search([('report_name','=','/report/einvoicepdf')])
+    
+#     @api.multi
+#     def invoice_print(self):
+#         """ Print the invoice and mark it as sent, so that we can see more
+#             easily the next step of the workflow
+#         """
+#         self.ensure_one()
+#         if self.digital_invoice_type:
+#             return {
+#                 'type': 'ir.actions.act_url',
+#                 'url': '/web/show_invoice_pdf/%s' % self.id,
+#                 'target': 'current',
+#             }
+#         else:
+#             return super(AccountInvoice, self).invoice_print()
+#         

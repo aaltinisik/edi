@@ -65,7 +65,7 @@
                 <button type="object" name="update_status"
                         string="Update Status"
                         attrs="{'invisible' : ['|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid'])]}"/>
-                <button type="object" name="get_document_data"
+                <button type="object" name="invoice_print"
                         string="Download PDF"/> 
             </button>
 <!--             <button name="invoice_print" type="object" -->

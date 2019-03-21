@@ -73,3 +73,5 @@ class Binary(http.Controller):
         response = request.make_response(content, headers)
 
         return response
+    
+
