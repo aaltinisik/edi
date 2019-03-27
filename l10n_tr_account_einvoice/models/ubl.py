@@ -216,12 +216,12 @@ class BaseUbl(models.AbstractModel):
                 party_tax_scheme, ns['cac'] + 'TaxScheme')
             tax_office = etree.SubElement(
                 partney_tax_schmeme_tax_office, ns['cbc'] + 'Name')
-            tax_office.text = commercial_partner.x_vergidairesi
+            tax_office.text = commercial_partner.x_vergidairesi or ""
             tax_scheme_dict = self._ubl_get_tax_scheme_dict_from_partner(
                 commercial_partner)
-            self._ubl_add_tax_scheme(
-                tax_scheme_dict, party_tax_scheme, ns, version=version)
-            
+#             self._ubl_add_tax_scheme(
+#                 tax_scheme_dict, party_tax_scheme, ns, version=version)
+#             
     @api.model
     def _ubl_add_tax_subtotal(
             self, taxable_amount, tax_amount, tax, currency_code,

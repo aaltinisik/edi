@@ -210,7 +210,7 @@ class AccountEinvoiceProvider(models.Model):
                 result = client.service.GetActiveListByDate(from_date)
                 if result:
                     for row in result[0]:
-                        postbox = self.env['account.einvoice.postbox'].search([
+                        postbox = self.env['res.partner.einvoice.postbox'].search([
                             ('identifier', '=', 'TR'+row.Identifier),
                             ('name', '=', row.Alias)
                         ], limit=1)
@@ -220,7 +220,7 @@ class AccountEinvoiceProvider(models.Model):
                                 'name': row.Alias,
                                 'title':row.Title
                             }
-                            self.env['account.einvoice.postbox'].create(postbox)
+                            self.env['res.partner.einvoice.postbox'].create(postbox)
                     
                     self._cr.commit()
                     
@@ -273,30 +273,54 @@ class AccountEinvoiceProvider(models.Model):
                             ('alias', '=', row.Alias)
                         ], limit=1)
                         if not user:
+                            updatedate=""
+                            if hasattr(row, 'UpdatedDate'):
+                                updatedate=row.UpdatedDate
                             user = {
                                 'identifier': row.Identifier,
                                 'alias': row.Alias,
                                 'title': row.Title or '',
                                 'type': row.Type or '',
-                                'first_created': row.CreatedDate,
-                                'alias_created': row.UpdatedDate,
+                                'first_created': str(row.CreatedDate),
+                                'alias_created': updatedate,
                             }
                             registered_user = self.env['account.einvoice.registered.user'].create(user)
                             self.einvoice_check_user(registered_user)
                     
-                    for partner in self.env['res.partner'].search([('parent_id','=',False),('sanitized_vat','in',partners_to_check.keys())]):
+                    for partner in self.env['res.partner'].search([('parent_id','=',False),('sanitized_vat','in',list(partners_to_check.keys()))]):
                         if len(partner.einvoice_postbox_ids)>1:
-                            defaultpk = self.env['account.einvoice.postbox'].search([('partner_id','=',partner.id),('name','ilike','default')])
+                            defaultpk = self.env['res.partner.einvoice.postbox'].search([('partner_id','=',partner.id),('name','ilike','default')])
                             if len(defaultpk) > 0:
-                                partner.default_einvoice_postbox = defaultpk[0]
+                                partner.default_einvoice_postbox_id = defaultpk[0]
                             
                         
-                return False,False
+                return registered_user,registered_user
             except WebFault as e:
                 _logger.error(_('E-Invoice Provider WebService Error!')+ '\n\n' + e.message)
                 pass
             return False
+    
+    @api.multi
+    def einvoice_check_user(self, registered_user):
+        users = self.env['res.partner'].search([('vat', '=', 'TR'+registered_user.identifier)])
+        for user in users:
+            postbox = {
+                'partner_id': user.id,
+                'name': registered_user.alias,
+                'identifier': registered_user.identifier
+            }
+            if not user.einvoice_registered=='yes':
+                user.einvoice_registered = 'yes'
+                self.env['res.partner.einvoice.postbox'].create(postbox)
+            else:
+                pbx = self.env['res.partner.einvoice.postbox'].search([('partner_id', '=', user.id),
+                                                                   ('name', '=', registered_user.alias)])
+                if not pbx:
+                    self.env['res.partner.einvoice.postbox'].create(postbox)
+            if not user.default_einvoice_postbox_id and user.einvoice_postbox_ids:
+                user.default_einvoice_postbox_id = user.einvoice_postbox_ids[0]
 
+    
     @api.multi
     def einvoice_get_invoices(self):
         if self.type != 'isis':

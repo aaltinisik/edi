@@ -15,4 +15,16 @@ class EinvoicePostbox(models.Model):
     
     name = fields.Char('Name', required=True)
     partner_id = fields.Many2one('res.partner','Partner', required=True, ondelete='cascade')
+    identifier = fields.Char('Identifier')
     
+    
+class AccountEinvoiceRegisteredUser(models.Model):
+    _name='account.einvoice.registered.user'
+    
+    
+    identifier= fields.Char('Identifier')
+    alias = fields.Char('Alias')
+    title = fields.Char('Title')                          
+    type = fields.Char('Type')
+    first_created= fields.Char('First Created')
+    alias_created = fields.Char('Alias Created')

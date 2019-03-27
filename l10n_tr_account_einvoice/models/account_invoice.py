@@ -34,7 +34,7 @@ class AccountInvoice(models.Model):
     _name = 'account.invoice'
     _inherit = ['account.invoice', 'base.ubl']
 
-    digital_invoice_type = fields.Selection(selection=[('e_invoice', 'E-Invoice'), ('e_archive', 'E-Archive')],
+    digital_invoice_type = fields.Selection(selection=[('e_invoice', 'E-Invoice'), ('e_archive', 'E-Archive'),('ihracat','IHRACAT')],
                                             string="Digital Invoice Type")
 
     e_invoicetype = fields.Selection(selection=[('temel_fatura', 'Temel Fatura'), ('ticari_fatura', 'Ticari Fatura')],
@@ -58,6 +58,11 @@ class AccountInvoice(models.Model):
     
     einvoice_xml_id = fields.Many2one('ir.attachment',string='Sent XML')
     einvoice_pdf_id = fields.Many2one('ir.attachment',string='Downloaded PDF')
+    
+    gtb_ref_no_date = fields.Date('GTB Refrence Date')
+    gtb_ref_no = fields.Char('GTB Reference No')
+    gtb_declaration_no = fields.Char('GTB Declaration No')
+    gtb_intac_date = fields.Date('GTB INTAC Date')
     
     
     @api.multi
@@ -358,7 +363,7 @@ class AccountInvoice(models.Model):
                     additional_reference, ns['cbc'] + 'ID')
                 id.text = self.number
                 issue_date = etree.SubElement(additional_reference, ns['cbc'] + 'IssueDate')
-                issue_date.text = str(self.date_invoice)
+                issue_date.text = str(self.date_invoice) or str(datetime.datetime.today())[:10]
                 document_type = etree.SubElement(additional_reference, ns['cbc'] + 'DocumentType')
                 document_type.text = "XSLT"
                 attachment = etree.SubElement(additional_reference, ns['cac'] + 'Attachment')
@@ -532,6 +537,7 @@ class AccountInvoice(models.Model):
             }
             
     
+    
     @api.multi
     def action_invoice_open(self):
         # Send E-Invoice or E-Archive    
@@ -595,7 +601,8 @@ class AccountInvoice(models.Model):
             elif invoice.digital_invoice_type == 'e_archive':
                 sequence = self.env['ir.sequence'].search([('code', '=', 'account.earchive')],limit=1)
                 
-            invoice.number = sequence.next_by_id()
+            if not invoice.number:
+                invoice.number = sequence.next_by_id()
             xslt= bytes(bytearray(u'{}'.format(self.get_einvoice_xsl()), encoding='utf-8')) 
             #provider_res = invoice.company_id.einvoice_provider_id.send(invoice)
             #if provider_res:
@@ -773,7 +780,7 @@ class AccountInvoice(models.Model):
             bytedata=self.generate_einvoice_pdf()
         
         self.einvoice_pdf_id=self.env['ir.attachment'].create({
-                'name':str(self.number) + '.pdf','type':'binary',
+                'name':str(self.number) + '.pdf','type':'binary','datas_fname':str(self.number),
                 'datas':bytedata})   
         return self.env['ir.actions.report'].search([('report_name','=','/report/einvoicepdf')])
     

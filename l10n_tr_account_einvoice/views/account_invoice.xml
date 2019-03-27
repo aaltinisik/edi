@@ -93,7 +93,24 @@
                         string="Reset to Draft" type="object"
                         groups="account.group_account_invoice"/>
             </button>
-
+			<xpath expr="//notebook" position="inside">
+					<page string="E-Invoice" >
+						<group>
+							<group>
+<!-- 								<field name="einvoice_sender_id" attrs="{'required':[('is_einvoice','!=',False)]}" -->
+<!-- 									options="{'no_open': True,'no_create': 1, 'no_create_edit': 1}" /> -->
+								
+<!-- 								<field name="einvoice_postbox_id" -->
+<!-- 									attrs="{'required':[('is_einvoice','!=',False),('einvoice_profile','not in',['EARSIVFATURA','IHRACAT'])],'invisible':['|',('is_einvoice','=',False),('einvoice_profile','in',['EARSIVFATURA','IHRACAT'])]}" -->
+<!-- 									options="{'no_open': True,'no_create': 1, 'no_creaete_edit': 1}" /> -->
+								<field name="gtb_ref_no" attrs="{'readonly': True,'invisible':[('digital_invoice_type','!=','IHRACAT')]}"></field>
+								<field name="gtb_ref_no_date" attrs="{'readonly': True,'invisible':[('digital_invoice_type','!=','IHRACAT')]}"></field>
+								<field name="gtb_declaration_no" attrs="{'readonly': True,'invisible':[('digital_invoice_type','!=','IHRACAT')]}"></field>
+								<field name="gtb_intac_date" attrs="{'readonly': True,'invisible':[('digital_invoice_type','!=','IHRACAT')]}"></field>
+							</group>
+						</group>
+					</page>
+					</xpath>
 
         </field>
     </record>
