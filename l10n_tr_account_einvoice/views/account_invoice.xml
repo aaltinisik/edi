@@ -55,7 +55,7 @@
                        attrs="{'invisible' : [('state','not in', ['open', 'paid'])] ,'readonly' : True}"/>
 
             </xpath>
-            <button name="action_invoice_cancel" position="before">
+            <xpath expr="//button[@name='action_invoice_cancel']" position="before">
                 <button type="object" name="send"
                         string="Send E-Invoice"
                         attrs="{'invisible' : ['|',  ('send_status', '=', 'sent'), '|', ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_invoice')]}"/>
@@ -67,7 +67,7 @@
                         attrs="{'invisible' : ['|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid'])]}"/>
                 <button type="object" name="invoice_print"
                         string="Download PDF"/> 
-            </button>
+            </xpath>
 <!--             <button name="invoice_print" type="object" -->
 <!--                     attrs="{'invisible':['|',('sent','=',True), ('state', '!=', 'open')]}" class="oe_highlight" -->
 <!--                     groups="base.group_user" position="attributes"> -->
