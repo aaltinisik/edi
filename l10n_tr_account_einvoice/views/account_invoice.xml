@@ -21,19 +21,19 @@
                        attrs="{'invisible' : [('state','not in', ['open', 'paid'])] ,'readonly' : True}"/>
 
             </xpath>
-            <button name="action_invoice_cancel" position="before">
-                 <button type="object" name="send"
-                        string="Send E-Invoice"
-                        attrs="{'invisible' : ['|',  ('send_status', '=', 'sent'), '|', ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_invoice')]}"/>
-                <button type="object" name="send"
-                        string="Send E-Archive"
-                        attrs="{'invisible' : ['|', '|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_archive')]}"/>
-                <button type="object" name="update_status"
-                        string="Update Status"
-                        attrs="{'invisible' : ['|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid'])]}"/>
-                <button type="object" name="get_document_data"
-                        string="Download PDF" attrs="{'invisible' : [('send_status','not in', 'sent')]}"/>
-            </button>
+<!--             <xpath expr="//button[@name='action_invoice_cancel']" position="before"> -->
+<!--                  <button type="object" name="send" -->
+<!--                         string="Send E-Invoice" -->
+<!--                         attrs="{'invisible' : ['|',  ('send_status', '=', 'sent'), '|', ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_invoice')]}"/> -->
+<!--                 <button type="object" name="send" -->
+<!--                         string="Send E-Archive" -->
+<!--                         attrs="{'invisible' : ['|', '|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid']), ('digital_invoice_type', '!=', 'e_archive')]}"/> -->
+<!--                 <button type="object" name="update_status" -->
+<!--                         string="Update Status" -->
+<!--                         attrs="{'invisible' : ['|',('send_status', '=', 'sent'), ('state', 'not in', ['open','paid'])]}"/> -->
+<!--                 <button type="object" name="get_document_data" -->
+<!--                         string="Download PDF" attrs="{'invisible' : [('send_status','not in', 'sent')]}"/> -->
+<!--             </xpath> -->
         </field>
     </record>
     
