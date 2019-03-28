@@ -264,6 +264,7 @@ class AccountEinvoiceProvider(models.Model):
                 l = client.factory.create('ns3:ArrayOfstring')   
                 l.string = vknList
                 result = client.service.GetActiveListByVknList(l)
+                registered_user=False
                 if result:
                     partners_to_check = {}
                     for row in result[0]:
